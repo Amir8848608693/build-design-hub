@@ -11,6 +11,7 @@ interface StatCardProps {
   change?: string;
   changePositive?: boolean;
   subtitle?: string;
+  onClick?: () => void;
 }
 
 const StatCard = ({ 
@@ -21,10 +22,17 @@ const StatCard = ({
   iconColor, 
   change, 
   changePositive = true,
-  subtitle 
+  subtitle,
+  onClick 
 }: StatCardProps) => {
   return (
-    <Card className="hover:shadow-lg transition-shadow">
+    <Card 
+      className={cn(
+        "hover:shadow-lg transition-shadow",
+        onClick && "cursor-pointer hover:scale-[1.02] transition-transform"
+      )}
+      onClick={onClick}
+    >
       <CardContent className="p-6">
         <div className="flex items-start justify-between">
           <div className="flex-1">
