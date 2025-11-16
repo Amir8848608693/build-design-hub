@@ -2,8 +2,11 @@ import { Search, ShoppingCart, User, MessageSquare, UserCog } from "lucide-react
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Badge } from "./ui/badge";
+import { useNavigate } from "react-router-dom";
 
 const Header = () => {
+  const navigate = useNavigate();
+
   return (
     <header className="border-b bg-background sticky top-0 z-50">
       <div className="container mx-auto px-4 py-4">
@@ -27,7 +30,7 @@ const Header = () => {
 
           {/* Navigation */}
           <nav className="flex items-center gap-4">
-            <Button variant="ghost" size="sm" className="gap-2">
+            <Button variant="ghost" size="sm" className="gap-2" onClick={() => navigate('/admin/login')}>
               <UserCog className="h-4 w-4" />
               <span className="hidden md:inline text-primary">Admin</span>
             </Button>
