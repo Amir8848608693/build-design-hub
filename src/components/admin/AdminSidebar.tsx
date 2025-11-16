@@ -24,6 +24,14 @@ const menuItems = [
 const AdminSidebar = ({ activeItem = "dashboard" }: AdminSidebarProps) => {
   const navigate = useNavigate();
 
+  const handleMenuClick = (itemId: string) => {
+    if (itemId === "dashboard") {
+      navigate("/admin/dashboard");
+    } else {
+      navigate(`/admin/${itemId}`);
+    }
+  };
+
   const handleLogout = () => {
     navigate("/");
   };
@@ -48,6 +56,7 @@ const AdminSidebar = ({ activeItem = "dashboard" }: AdminSidebarProps) => {
           return (
             <button
               key={item.id}
+              onClick={() => handleMenuClick(item.id)}
               className={cn(
                 "w-full flex items-center gap-3 px-6 py-3 text-sm transition-colors",
                 isActive 

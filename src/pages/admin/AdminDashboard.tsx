@@ -1,4 +1,5 @@
 import { DollarSign, Package, Users, ShoppingCart, TrendingUp, User2 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import AdminSidebar from "@/components/admin/AdminSidebar";
 import StatCard from "@/components/admin/StatCard";
 import UserActivityItem from "@/components/admin/UserActivityItem";
@@ -8,6 +9,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 
 const AdminDashboard = () => {
+  const navigate = useNavigate();
+
   return (
     <div className="flex min-h-screen bg-background">
       <AdminSidebar activeItem="dashboard" />
@@ -39,6 +42,7 @@ const AdminDashboard = () => {
               iconColor="text-green-600"
               change="+12.5%"
               changePositive={true}
+              onClick={() => navigate("/admin/analytics")}
             />
             <StatCard
               title="Products"
@@ -47,6 +51,7 @@ const AdminDashboard = () => {
               iconBgColor="bg-blue-100"
               iconColor="text-blue-600"
               subtitle="0 low stock"
+              onClick={() => navigate("/admin/products")}
             />
             <StatCard
               title="Active Users"
@@ -56,6 +61,7 @@ const AdminDashboard = () => {
               iconColor="text-purple-600"
               change="+8.3%"
               changePositive={true}
+              onClick={() => navigate("/admin/users")}
             />
             <StatCard
               title="Orders"
@@ -65,6 +71,7 @@ const AdminDashboard = () => {
               iconColor="text-orange-600"
               change="+15.7%"
               changePositive={true}
+              onClick={() => navigate("/admin/orders")}
             />
           </div>
 
@@ -134,7 +141,7 @@ const AdminDashboard = () => {
             <Card>
               <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle>Recent Orders</CardTitle>
-                <Button variant="link" className="text-primary">
+                <Button variant="link" className="text-primary" onClick={() => navigate("/admin/orders")}>
                   View All →
                 </Button>
               </CardHeader>
@@ -164,7 +171,7 @@ const AdminDashboard = () => {
             <Card>
               <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle>Top Products</CardTitle>
-                <Button variant="link" className="text-primary">
+                <Button variant="link" className="text-primary" onClick={() => navigate("/admin/products")}>
                   View All →
                 </Button>
               </CardHeader>
