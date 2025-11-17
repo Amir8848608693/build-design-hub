@@ -1,11 +1,34 @@
-import { Search, ShoppingCart, User, MessageSquare, UserCog } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Search, ShoppingCart, User, MessageSquare, UserCog, LogOut } from "lucide-react";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Badge } from "./ui/badge";
 import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 
 const Header = () => {
   const navigate = useNavigate();
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      setIsAuthenticated(!!session);
+    };
+
+    checkAuth();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setIsAuthenticated(!!session);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    navigate("/");
+  };
 
   return (
     <header className="border-b bg-background sticky top-0 z-50">
@@ -34,22 +57,32 @@ const Header = () => {
               <UserCog className="h-4 w-4" />
               <span className="hidden md:inline text-primary">Admin</span>
             </Button>
-            <Button variant="ghost" size="sm" className="gap-2">
-              <MessageSquare className="h-4 w-4" />
-              <span className="hidden md:inline">Chatbox</span>
-            </Button>
-            <Button variant="ghost" size="sm" className="gap-2">
-              <User className="h-4 w-4" />
-              <span className="hidden md:inline">Profile</span>
-            </Button>
-            <Button variant="ghost" size="sm" className="gap-2">
-              <span className="hidden md:inline">Sign In</span>
-            </Button>
+            {isAuthenticated ? (
+              <>
+                <Button variant="ghost" size="sm" className="gap-2" onClick={() => navigate('/chat')}>
+                  <MessageSquare className="h-4 w-4" />
+                  <span className="hidden md:inline">Chat</span>
+                </Button>
+                <Button variant="ghost" size="sm" className="gap-2" onClick={() => navigate('/profile')}>
+                  <User className="h-4 w-4" />
+                  <span className="hidden md:inline">Profile</span>
+                </Button>
+                <Button variant="ghost" size="sm" className="gap-2" onClick={handleSignOut}>
+                  <LogOut className="h-4 w-4" />
+                  <span className="hidden md:inline">Logout</span>
+                </Button>
+              </>
+            ) : (
+              <Button variant="ghost" size="sm" className="gap-2" onClick={() => navigate('/auth')}>
+                <User className="h-4 w-4" />
+                <span className="hidden md:inline">Sign In</span>
+              </Button>
+            )}
             <Button variant="ghost" size="sm" className="gap-2 relative">
               <ShoppingCart className="h-4 w-4" />
               <span className="hidden md:inline">Cart</span>
               <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 bg-discount text-discount-foreground">
-                1
+                0
               </Badge>
             </Button>
           </nav>

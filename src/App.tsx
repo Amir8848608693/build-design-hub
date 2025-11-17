@@ -17,6 +17,11 @@ import AdminOffers from "./pages/admin/AdminOffers";
 import AdminSocial from "./pages/admin/AdminSocial";
 import AdminNotifications from "./pages/admin/AdminNotifications";
 import AdminSettings from "./pages/admin/AdminSettings";
+import Auth from "./pages/Auth";
+import ProfileCreate from "./pages/ProfileCreate";
+import Profile from "./pages/Profile";
+import ProfileEdit from "./pages/ProfileEdit";
+import Chat from "./pages/Chat";
 
 const queryClient = new QueryClient();
 
@@ -28,6 +33,11 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Index />} />
+          <Route path="/auth" element={<Auth />} />
+          <Route path="/profile/create" element={<ProfileCreate />} />
+          <Route path="/profile" element={<Profile />} />
+          <Route path="/profile/edit" element={<ProfileEdit />} />
+          <Route path="/chat" element={<Chat />} />
           <Route path="/admin/login" element={<AdminLogin />} />
           <Route path="/admin/dashboard" element={<AdminDashboard />} />
           <Route path="/admin/products" element={<AdminProducts />} />
