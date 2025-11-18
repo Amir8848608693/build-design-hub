@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import ConversationList from "@/components/chat/ConversationList";
 import CreateGroupDialog from "@/components/chat/CreateGroupDialog";
+import TypingIndicator from "@/components/chat/TypingIndicator";
 
 interface Message {
   id: string;
@@ -31,7 +32,10 @@ const Chat = () => {
   const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
   const [conversationInfo, setConversationInfo] = useState<any>(null);
   const [showCreateGroup, setShowCreateGroup] = useState(false);
+  const [typingUsers, setTypingUsers] = useState<string[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const presenceChannelRef = useRef<any>(null);
 
   useEffect(() => {
     checkAuth();
@@ -42,7 +46,15 @@ const Chat = () => {
       loadMessages();
       loadConversationInfo();
       subscribeToMessages();
+      subscribeToTyping();
     }
+    
+    return () => {
+      if (presenceChannelRef.current) {
+        supabase.removeChannel(presenceChannelRef.current);
+        presenceChannelRef.current = null;
+      }
+    };
   }, [selectedConversationId]);
 
   useEffect(() => {
@@ -89,6 +101,93 @@ const Chat = () => {
     return () => {
       supabase.removeChannel(channel);
     };
+  };
+
+  const subscribeToTyping = async () => {
+    if (!selectedConversationId || !currentUser) return;
+
+    // Clean up previous channel
+    if (presenceChannelRef.current) {
+      await supabase.removeChannel(presenceChannelRef.current);
+    }
+
+    const channel = supabase.channel(`typing:${selectedConversationId}`, {
+      config: {
+        presence: {
+          key: currentUser.id,
+        },
+      },
+    });
+
+    channel
+      .on('presence', { event: 'sync' }, () => {
+        const state = channel.presenceState();
+        const typing: string[] = [];
+
+        Object.keys(state).forEach((userId) => {
+          if (userId !== currentUser.id) {
+            const presences = state[userId];
+            if (presences && presences.length > 0) {
+              const presence = presences[0] as any;
+              if (presence.typing && presence.username) {
+                typing.push(presence.username);
+              }
+            }
+          }
+        });
+
+        setTypingUsers(typing);
+      })
+      .subscribe(async (status) => {
+        if (status === 'SUBSCRIBED') {
+          // Get current user's profile info
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('username, full_name')
+            .eq('user_id', currentUser.id)
+            .single();
+
+          // Initialize presence with not typing
+          await channel.track({
+            typing: false,
+            username: profile?.full_name || profile?.username || 'Unknown',
+          });
+        }
+      });
+
+    presenceChannelRef.current = channel;
+  };
+
+  const updateTypingStatus = async (isTyping: boolean) => {
+    if (!presenceChannelRef.current || !currentUser) return;
+
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('username, full_name')
+      .eq('user_id', currentUser.id)
+      .single();
+
+    await presenceChannelRef.current.track({
+      typing: isTyping,
+      username: profile?.full_name || profile?.username || 'Unknown',
+    });
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setNewMessage(e.target.value);
+
+    // Clear existing timeout
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+    }
+
+    // Set typing to true
+    updateTypingStatus(true);
+
+    // Set timeout to stop typing after 2 seconds of inactivity
+    typingTimeoutRef.current = setTimeout(() => {
+      updateTypingStatus(false);
+    }, 2000);
   };
 
   const loadConversationInfo = async () => {
@@ -166,6 +265,14 @@ const Chat = () => {
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newMessage.trim() || !selectedConversationId || !currentUser) return;
+
+    // Clear typing timeout
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+    }
+
+    // Stop typing indicator
+    await updateTypingStatus(false);
 
     try {
       const { error } = await supabase
@@ -271,11 +378,13 @@ const Chat = () => {
               </div>
             </ScrollArea>
 
+            <TypingIndicator userNames={typingUsers} />
+
             <div className="border-t p-4">
               <form onSubmit={handleSendMessage} className="flex gap-2">
                 <Input
                   value={newMessage}
-                  onChange={(e) => setNewMessage(e.target.value)}
+                  onChange={handleInputChange}
                   placeholder="Type a message..."
                   className="flex-1"
                 />
